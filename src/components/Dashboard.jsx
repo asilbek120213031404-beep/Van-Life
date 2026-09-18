@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import supabase from "../lib/supabaseClient";
+import AddVanModal from "./AddVanModal";
 
 export default function Dashboard() {
     const [vans, setVans] = useState([]);
@@ -9,13 +10,17 @@ export default function Dashboard() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
     const [showAll, setShowAll] = useState(false);
+    const [isAddOpen, setIsAddOpen] = useState(false);
 
     useEffect(() => {
         async function fetchDashboardData() {
             setLoading(true);
             try {
                 // 1. Fetch Vans
-                const { data: vansData } = await supabase.from("vans").select("*");
+                const { data: vansData } = await supabase
+                    .from("vans")
+                    .select("*")
+                    .order("id", { ascending: false });
                 setVans(vansData ?? []);
 
                 // 2. Fetch Bookings for total income sum
@@ -84,14 +89,22 @@ export default function Dashboard() {
 
             {/* Listed vans section */}
             <div className="flex flex-col gap-6 w-full p-8 bg-[rgba(255,247,237,1)]">
-                <div className="flex items-center justify-between w-full">
-                    <h2 className="text-2xl font-bold text-gray-900">Your listed vans</h2>
-                    <button
-                        onClick={() => setShowAll(!showAll)}
-                        className="font-medium text-gray-800 underline hover:text-orange-600 cursor-pointer"
-                    >
-                        {showAll ? "Show less" : "View all"}
-                    </button>
+                <div className="flex items-center justify-between w-full flex-wrap gap-4">
+                    <h2 className="text-2xl font-bold text-gray-900">Your listed vans ({vans.length})</h2>
+                    <div className="flex items-center gap-4">
+                        <button
+                            onClick={() => setIsAddOpen(true)}
+                            className="px-3.5 py-1.5 bg-[rgba(255,140,56,1)] text-white font-bold text-sm rounded-lg hover:bg-orange-600 transition shadow-xs cursor-pointer flex items-center gap-1.5"
+                        >
+                            <span>➕</span> Add Van / Villa
+                        </button>
+                        <button
+                            onClick={() => setShowAll(!showAll)}
+                            className="font-medium text-gray-800 underline hover:text-orange-600 cursor-pointer text-sm"
+                        >
+                            {showAll ? "Show less" : "View all"}
+                        </button>
+                    </div>
                 </div>
 
                 {loading ? (
@@ -113,7 +126,14 @@ export default function Dashboard() {
                                         className="w-16 h-16 object-cover rounded-md"
                                     />
                                     <div className="flex flex-col items-start gap-1">
-                                        <h3 className="text-lg font-bold text-gray-900">{van.name}</h3>
+                                        <div className="flex items-center gap-2">
+                                            <h3 className="text-lg font-bold text-gray-900">{van.name}</h3>
+                                            {van.type === "villa" && (
+                                                <span className="text-[10px] bg-purple-100 text-purple-800 font-bold px-2 py-0.5 rounded-full uppercase">
+                                                    Villa
+                                                </span>
+                                            )}
+                                        </div>
                                         <p className="text-gray-600">${van.price}/day</p>
                                     </div>
                                 </div>
@@ -123,6 +143,15 @@ export default function Dashboard() {
                     </div>
                 )}
             </div>
+
+            {isAddOpen && (
+                <AddVanModal
+                    onClose={() => setIsAddOpen(false)}
+                    onAdded={(newVan) => {
+                        setVans((prev) => [newVan, ...prev]);
+                    }}
+                />
+            )}
         </div>
     );
 }

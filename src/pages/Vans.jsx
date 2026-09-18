@@ -7,6 +7,9 @@ export default function Vans() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
 
+    const INITIAL_LIMIT = 4;
+    const [limit, setLimit] = useState(INITIAL_LIMIT);
+
     const [searchParams, setSearchParams] = useSearchParams();
     const typeFilter = searchParams.get("type");
 
@@ -44,6 +47,11 @@ export default function Vans() {
         fetchVans();
     }, []);
 
+    // Reset visible limit whenever filter changes
+    useEffect(() => {
+        setLimit(INITIAL_LIMIT);
+    }, [typeFilter]);
+
     const displayedVans = typeFilter
         ? allVans.filter((van) => {
             const vanType = van.type?.toLowerCase();
@@ -54,6 +62,18 @@ export default function Vans() {
             return vanType === filterType;
         })
         : allVans;
+
+    const visibleVans = displayedVans.slice(0, limit);
+    const hasMore = limit < displayedVans.length;
+    const isExpanded = limit > INITIAL_LIMIT;
+
+    const handleShowMore = () => {
+        setLimit((prev) => prev + 8);
+    };
+
+    const handleShowLess = () => {
+        setLimit(INITIAL_LIMIT);
+    };
 
     if (loading) {
         return (
@@ -86,31 +106,28 @@ export default function Vans() {
                     <nav className="flex items-center gap-3">
                         <button
                             onClick={() => handleFilterChange("type", typeFilter === "simple" ? null : "simple")}
-                            className={`px-4 py-2 rounded-md font-medium text-sm transition cursor-pointer ${
-                                typeFilter === "simple"
-                                    ? "bg-[rgba(225,118,84,1)] text-white"
-                                    : "bg-[rgba(255,234,208,1)] text-gray-800 hover:bg-[rgba(225,118,84,1)] hover:text-white"
-                            }`}
+                            className={`px-4 py-2 rounded-md font-medium text-sm transition cursor-pointer ${typeFilter === "simple"
+                                ? "bg-[rgba(225,118,84,1)] text-white"
+                                : "bg-[rgba(255,234,208,1)] text-gray-800 hover:bg-[rgba(225,118,84,1)] hover:text-white"
+                                }`}
                         >
                             Simple
                         </button>
                         <button
                             onClick={() => handleFilterChange("type", typeFilter === "luxury" ? null : "luxury")}
-                            className={`px-4 py-2 rounded-md font-medium text-sm transition cursor-pointer ${
-                                typeFilter === "luxury"
-                                    ? "bg-[rgba(22,22,22,1)] text-white"
-                                    : "bg-[rgba(255,234,208,1)] text-gray-800 hover:bg-[rgba(22,22,22,1)] hover:text-white"
-                            }`}
+                            className={`px-4 py-2 rounded-md font-medium text-sm transition cursor-pointer ${typeFilter === "luxury"
+                                ? "bg-[rgba(22,22,22,1)] text-white"
+                                : "bg-[rgba(255,234,208,1)] text-gray-800 hover:bg-[rgba(22,22,22,1)] hover:text-white"
+                                }`}
                         >
                             Luxury
                         </button>
                         <button
                             onClick={() => handleFilterChange("type", typeFilter === "rugged" ? null : "rugged")}
-                            className={`px-4 py-2 rounded-md font-medium text-sm transition cursor-pointer ${
-                                typeFilter === "rugged"
-                                    ? "bg-[rgba(17,94,89,1)] text-white"
-                                    : "bg-[rgba(255,234,208,1)] text-gray-800 hover:bg-[rgba(17,94,89,1)] hover:text-white"
-                            }`}
+                            className={`px-4 py-2 rounded-md font-medium text-sm transition cursor-pointer ${typeFilter === "rugged"
+                                ? "bg-[rgba(17,94,89,1)] text-white"
+                                : "bg-[rgba(255,234,208,1)] text-gray-800 hover:bg-[rgba(17,94,89,1)] hover:text-white"
+                                }`}
                         >
                             Rugged
                         </button>
@@ -128,7 +145,7 @@ export default function Vans() {
             </section>
 
             <section className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                {displayedVans.map((van) => {
+                {visibleVans.map((van) => {
                     const rawType = van.type?.toLowerCase();
                     let typeLabel = "Simple";
                     let color = "rgba(225, 118, 84, 1)";
@@ -176,6 +193,28 @@ export default function Vans() {
                     );
                 })}
             </section>
+
+            {/* Show More & Show Less controls */}
+            {displayedVans.length > INITIAL_LIMIT && (
+                <div className="flex items-center justify-center gap-4 mt-4 pt-4 border-t border-gray-100">
+                    {hasMore && (
+                        <button
+                            onClick={handleShowMore}
+                            className="px-6 py-2.5 bg-[rgba(255,140,56,1)] text-white font-bold rounded-xl hover:bg-orange-600 transition shadow-sm cursor-pointer text-sm"
+                        >
+                            Show More ({displayedVans.length - limit} left)
+                        </button>
+                    )}
+                    {isExpanded && (
+                        <button
+                            onClick={handleShowLess}
+                            className="px-6 py-2.5 bg-gray-200 text-gray-800 font-bold rounded-xl hover:bg-gray-300 transition cursor-pointer text-sm"
+                        >
+                            Show Less
+                        </button>
+                    )}
+                </div>
+            )}
         </div>
     );
 }
