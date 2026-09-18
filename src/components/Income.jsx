@@ -41,13 +41,12 @@ export default function Income() {
             <p className="text-gray-600">
                 Last <span className="font-semibold text-black underline">30 days</span>
             </p>
-            
+
             {loading ? (
                 <div className="h-12 w-48 bg-gray-300 animate-pulse rounded-lg"></div>
             ) : (
                 <div className="flex flex-col gap-1">
                     <h2 className="text-4xl font-extrabold text-gray-900">${totalIncome.toLocaleString()}.00</h2>
-                    <span className="text-xs text-green-700 font-bold">✓ Supabase real-vaqt balansi</span>
                 </div>
             )}
 

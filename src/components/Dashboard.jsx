@@ -73,7 +73,6 @@ export default function Dashboard() {
                 ) : (
                     <div className="flex flex-col gap-1">
                         <h1 className="text-5xl font-black text-gray-900">${income.toLocaleString()}.00</h1>
-                        <span className="text-xs text-orange-800 font-bold">Supabase-dagi umumiy tushum</span>
                     </div>
                 )}
             </div>
