@@ -105,7 +105,6 @@ export default function AddVanModal({ onClose, onAdded }) {
                             <option value="simple">Simple</option>
                             <option value="luxury">Luxury</option>
                             <option value="rugged">Rugged</option>
-                            <option value="villa">Villa</option>
                         </select>
                     </div>
 
