@@ -12,39 +12,42 @@ export default function Dashboard() {
     const [showAll, setShowAll] = useState(false);
     const [isAddOpen, setIsAddOpen] = useState(false);
 
-    useEffect(() => {
-        async function fetchDashboardData() {
-            setLoading(true);
-            try {
-                // 1. Fetch Vans
-                const { data: vansData } = await supabase
-                    .from("vans")
-                    .select("*")
-                    .order("id", { ascending: false });
-                setVans(vansData ?? []);
+    async function fetchDashboardData() {
+        setLoading(true);
+        try {
+            // 1. Fetch Vans
+            const { data: vansData } = await supabase
+                .from("vans")
+                .select("*")
+                .order("id", { ascending: false });
+            setVans(vansData ?? []);
 
-                // 2. Fetch Bookings for total income sum
-                const { data: bookingsData } = await supabase.from("bookings").select("total_price");
-                if (bookingsData) {
-                    const total = bookingsData.reduce((acc, b) => acc + (Number(b.total_price) || 0), 0);
-                    setIncome(total);
-                }
-
-                // 3. Fetch Reviews for avg rating calculation
-                const { data: reviewsData } = await supabase.from("reviews").select("rating");
-                if (reviewsData && reviewsData.length > 0) {
-                    const avg = (reviewsData.reduce((sum, r) => sum + r.rating, 0) / reviewsData.length).toFixed(1);
-                    setAvgRating(avg);
-                }
-            } catch (err) {
-                console.error("Dashboard data error:", err);
-                setError("Ma'lumotlarni o'qishda xatolik");
-            } finally {
-                setLoading(false);
+            // 2. Fetch Bookings for total income sum from Supabase
+            const { data: bookingsData } = await supabase.from("bookings").select("total_price");
+            if (bookingsData) {
+                const total = bookingsData.reduce((acc, b) => acc + (Number(b.total_price) || 0), 0);
+                setIncome(total);
             }
-        }
 
+            // 3. Fetch Reviews for avg rating calculation
+            const { data: reviewsData } = await supabase.from("reviews").select("rating");
+            if (reviewsData && reviewsData.length > 0) {
+                const avg = (reviewsData.reduce((sum, r) => sum + r.rating, 0) / reviewsData.length).toFixed(1);
+                setAvgRating(avg);
+            }
+        } catch (err) {
+            console.error("Dashboard data error:", err);
+            setError("Ma'lumotlarni o'qishda xatolik");
+        } finally {
+            setLoading(false);
+        }
+    }
+
+    useEffect(() => {
         fetchDashboardData();
+
+        window.addEventListener("booking-updated", fetchDashboardData);
+        return () => window.removeEventListener("booking-updated", fetchDashboardData);
     }, []);
 
     const viewAll = showAll ? vans : vans.slice(0, 3);
@@ -68,7 +71,10 @@ export default function Dashboard() {
                 {loading ? (
                     <div className="h-12 w-48 bg-orange-200 animate-pulse rounded-lg"></div>
                 ) : (
-                    <h1 className="text-5xl font-black text-gray-900">${income.toLocaleString()}.00</h1>
+                    <div className="flex flex-col gap-1">
+                        <h1 className="text-5xl font-black text-gray-900">${income.toLocaleString()}.00</h1>
+                        <span className="text-xs text-orange-800 font-bold">Supabase-dagi umumiy tushum</span>
+                    </div>
                 )}
             </div>
 

@@ -6,27 +6,31 @@ export default function Income() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
 
-    useEffect(() => {
-        async function fetchIncomeData() {
-            setLoading(true);
-            setError("");
+    async function fetchIncomeData() {
+        setLoading(true);
+        setError("");
 
-            const { data, error } = await supabase
-                .from("bookings")
-                .select("*, vans(name)")
-                .order("created_at", { ascending: false });
+        const { data, error } = await supabase
+            .from("bookings")
+            .select("*, vans(name)")
+            .order("created_at", { ascending: false });
 
-            if (error) {
-                console.error("Income fetch error:", error);
-                setError("Tranzaksiyalar ma'lumotini o'qishda xatolik");
-                setBookings([]);
-            } else {
-                setBookings(data ?? []);
-            }
-            setLoading(false);
+        if (error) {
+            console.error("Income fetch error:", error);
+            setError("Tranzaksiyalar ma'lumotini o'qishda xatolik");
+            setBookings([]);
+        } else {
+            setBookings(data ?? []);
         }
+        setLoading(false);
+    }
 
+    useEffect(() => {
         fetchIncomeData();
+
+        // Listen for booking updates across windows/tabs
+        window.addEventListener("booking-updated", fetchIncomeData);
+        return () => window.removeEventListener("booking-updated", fetchIncomeData);
     }, []);
 
     const totalIncome = bookings.reduce((acc, b) => acc + (Number(b.total_price) || 0), 0);
@@ -41,7 +45,10 @@ export default function Income() {
             {loading ? (
                 <div className="h-12 w-48 bg-gray-300 animate-pulse rounded-lg"></div>
             ) : (
-                <h2 className="text-4xl font-extrabold text-gray-900">${totalIncome.toLocaleString()}.00</h2>
+                <div className="flex flex-col gap-1">
+                    <h2 className="text-4xl font-extrabold text-gray-900">${totalIncome.toLocaleString()}.00</h2>
+                    <span className="text-xs text-green-700 font-bold">✓ Supabase real-vaqt balansi</span>
+                </div>
             )}
 
             <div className="flex flex-col gap-4 mt-4">
@@ -67,7 +74,7 @@ export default function Income() {
                         {bookings.map((item) => (
                             <div key={item.id} className="bg-white p-5 rounded-xl flex items-center justify-between shadow-xs">
                                 <div className="flex flex-col">
-                                    <h3 className="text-2xl font-bold text-gray-900">${item.total_price}</h3>
+                                    <h3 className="text-2xl font-bold text-gray-900">+${item.total_price}</h3>
                                     <p className="text-xs text-gray-500">
                                         Van: <strong>{item.vans?.name || "Van"}</strong> ({item.start_date} &rarr; {item.end_date})
                                     </p>
